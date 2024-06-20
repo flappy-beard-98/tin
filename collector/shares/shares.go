@@ -1,4 +1,4 @@
-package share
+package shares
 
 import (
 	"context"
@@ -7,7 +7,7 @@ import (
 	"fmt"
 	investapi "github.com/russianinvestments/invest-api-go-sdk/proto"
 	"time"
-	"tinkoff/adapter"
+	"tin/adapter"
 )
 
 // Share Объект передачи информации об акции.

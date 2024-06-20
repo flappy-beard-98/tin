@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"github.com/russianinvestments/invest-api-go-sdk/investgo"
 	"time"
-	"tinkoff/analyzer"
-	"tinkoff/collector"
+	"tin/analyzer"
+	"tin/collector"
 )
 
 var (

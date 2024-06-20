@@ -8,8 +8,8 @@ import (
 	"github.com/russianinvestments/invest-api-go-sdk/investgo"
 	investapi "github.com/russianinvestments/invest-api-go-sdk/proto"
 	"time"
-	"tinkoff/adapter"
-	"tinkoff/core"
+	"tin/adapter"
+	"tin/core"
 )
 
 // Dividend Информация о выплате.

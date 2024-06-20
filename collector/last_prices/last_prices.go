@@ -6,7 +6,7 @@ import (
 	"errors"
 	investapi "github.com/russianinvestments/invest-api-go-sdk/proto"
 	"time"
-	"tinkoff/adapter"
+	"tin/adapter"
 )
 
 // LastPrice Информация о цене последней сделки.

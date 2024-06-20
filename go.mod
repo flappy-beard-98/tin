@@ -1,4 +1,4 @@
-module tinkoff
+module tin
 
 go 1.21.4
 

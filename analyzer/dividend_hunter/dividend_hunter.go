@@ -7,8 +7,8 @@ import (
 	"fmt"
 	"slices"
 	"time"
-	"tinkoff/adapter"
-	"tinkoff/core"
+	"tin/adapter"
+	"tin/core"
 )
 
 type BaseItem struct {

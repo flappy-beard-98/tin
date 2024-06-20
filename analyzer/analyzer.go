@@ -2,8 +2,8 @@ package analyzer
 
 import (
 	"context"
-	"tinkoff/adapter"
-	"tinkoff/analyzer/dividend_hunter"
+	"tin/adapter"
+	"tin/analyzer/dividend_hunter"
 )
 
 type Analyzer struct {

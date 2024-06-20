@@ -4,10 +4,10 @@ import (
 	"context"
 	"github.com/russianinvestments/invest-api-go-sdk/investgo"
 	"time"
-	"tinkoff/adapter"
-	"tinkoff/collector/dividends"
-	"tinkoff/collector/last_prices"
-	"tinkoff/collector/shares"
+	"tin/adapter"
+	"tin/collector/dividends"
+	"tin/collector/last_prices"
+	"tin/collector/shares"
 )
 
 type Collector struct {
@@ -55,7 +55,7 @@ func (o *Collector) ImportShares(ctx context.Context) error {
 
 	o.logger.Infof("import shares")
 
-	items := share.NewShares()
+	items := shares.NewShares()
 	if err := items.Scheme(ctx, o.db); err != nil {
 		return err
 	}
@@ -81,14 +81,14 @@ func (o *Collector) ImportLastPrices(ctx context.Context, currency string) error
 
 	o.logger.Infof("import last prices")
 
-	shares := share.NewShares()
+	s := shares.NewShares()
 
-	if err := shares.ReadByCurrency(ctx, o.db, currency); err != nil {
+	if err := s.ReadByCurrency(ctx, o.db, currency); err != nil {
 		return err
 	}
 	o.logger.Infof("import last prices, got UIDs for %s", currency)
 
-	items := last_prices.NewLastPrices(shares.GetUids()...)
+	items := last_prices.NewLastPrices(s.GetUids()...)
 	if err := items.Scheme(ctx, o.db); err != nil {
 		return err
 	}
@@ -113,15 +113,15 @@ func (o *Collector) ImportLastPrices(ctx context.Context, currency string) error
 func (o *Collector) ImportDividends(ctx context.Context, currency string, from time.Time, to time.Time) error {
 	o.logger.Infof("import dividends")
 
-	shares := share.NewShares()
+	s := shares.NewShares()
 
-	if err := shares.ReadByCurrency(ctx, o.db, currency); err != nil {
+	if err := s.ReadByCurrency(ctx, o.db, currency); err != nil {
 		return err
 	}
 
 	o.logger.Infof("import dividends, got FIGIs for %s", currency)
 
-	items := dividends.NewDividends(from, to, shares.GetFigis()...)
+	items := dividends.NewDividends(from, to, s.GetFigis()...)
 	if err := items.Scheme(ctx, o.db); err != nil {
 		return err
 	}
