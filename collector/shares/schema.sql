@@ -1,0 +1,47 @@
+drop table if exists collector_shares;
+
+create table if not exists collector_shares
+(
+    figi                  text,
+    ticker                text,
+    classcode             text,
+    isin                  text,
+    lot                   int,
+    currency              text,
+    klong                 real,
+    kshort                real,
+    dlong                 real,
+    dshort                real,
+    dlongmin              real,
+    dshortmin             real,
+    shortenabledflag      numeric,
+    name                  text,
+    exchange              text,
+    ipodate               text,
+    issuesize             int,
+    countryofrisk         text,
+    countryofriskname     text,
+    sector                text,
+    issuesizeplan         int,
+    nominal               real,
+    tradingstatus         text,
+    otcflag               numeric,
+    buyavailableflag      numeric,
+    sellavailableflag     numeric,
+    divyieldflag          numeric,
+    sharetype             text,
+    minpriceincrement     real,
+    apitradeavailableflag numeric,
+    uid                   text primary key,
+    realexchange          text,
+    positionuid           text,
+    foriisflag            numeric,
+    forqualinvestorflag   numeric,
+    weekendflag           numeric,
+    blockedtcaflag        numeric,
+    liquidityflag         numeric,
+    first_1mincandledate  text,
+    first_1daycandledate  text
+) without rowid;
+
+
