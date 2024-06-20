@@ -2,6 +2,7 @@ package collector
 
 import (
 	"context"
+	"github.com/russianinvestments/invest-api-go-sdk/investgo"
 	"time"
 	"tinkoff/adapter"
 	"tinkoff/collector/dividends"
@@ -15,7 +16,7 @@ type Collector struct {
 	tapi   *adapter.TApi
 }
 
-func New(dbFileName string, apiConfigName string) (*Collector, error) {
+func New(dbFileName string, apiConfig investgo.Config) (*Collector, error) {
 	db, err := adapter.NewSqliteDb(dbFileName)
 	if err != nil {
 		return nil, err
@@ -26,7 +27,7 @@ func New(dbFileName string, apiConfigName string) (*Collector, error) {
 		return nil, err
 	}
 
-	tapi, err := adapter.NewTapi(apiConfigName, logger)
+	tapi, err := adapter.NewTapi(apiConfig, logger)
 	if err != nil {
 		return nil, err
 	}

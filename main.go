@@ -2,7 +2,9 @@ package main
 
 import (
 	"context"
+	_ "embed"
 	"fmt"
+	"github.com/russianinvestments/invest-api-go-sdk/investgo"
 	"time"
 	"tinkoff/analyzer"
 	"tinkoff/collector"
@@ -17,11 +19,20 @@ var (
 	money    = 300_000.0
 )
 
+//go:embed apikey.txt
+var apiKey string
+
 func main() {
 
 	ctx := context.Background()
 
-	c, err := collector.New(db, config)
+	cfg, err := investgo.LoadConfig(config)
+	if err != nil {
+		panic(err)
+	}
+	cfg.Token = apiKey
+
+	c, err := collector.New(db, cfg)
 	if err != nil || c == nil {
 		panic(fmt.Sprintf("collector not created or error occured : %v", err))
 	}

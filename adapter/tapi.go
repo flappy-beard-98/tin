@@ -2,6 +2,7 @@ package adapter
 
 import (
 	"context"
+	_ "embed"
 	"github.com/russianinvestments/invest-api-go-sdk/investgo"
 	"os/signal"
 	"syscall"
@@ -12,11 +13,7 @@ type TApi struct {
 	cancel context.CancelFunc
 }
 
-func NewTapi(configName string, logger Logger) (*TApi, error) {
-	cfg, err := investgo.LoadConfig(configName)
-	if err != nil {
-		return nil, err
-	}
+func NewTapi(cfg investgo.Config, logger Logger) (*TApi, error) {
 	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM, syscall.SIGKILL)
 
 	client, err := investgo.NewClient(ctx, cfg, logger)
