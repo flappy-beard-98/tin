@@ -2,143 +2,103 @@ package collector
 
 import (
 	"context"
+	"github.com/jmoiron/sqlx"
 	"github.com/russianinvestments/invest-api-go-sdk/investgo"
+	"go.uber.org/zap"
 	"time"
-	"tin/adapter"
 	"tin/collector/dividends"
 	"tin/collector/last_prices"
 	"tin/collector/shares"
 )
 
 type Collector struct {
-	db     *adapter.Db
-	logger adapter.Logger
-	tapi   *adapter.TApi
+	db     *sqlx.DB
+	logger *zap.Logger
+	client *investgo.Client
 }
 
-func New(dbFileName string, apiConfig investgo.Config) (*Collector, error) {
-	db, err := adapter.NewSqliteDb(dbFileName)
-	if err != nil {
-		return nil, err
-	}
-
-	logger, err := adapter.NewLogger()
-	if err != nil {
-		return nil, err
-	}
-
-	tapi, err := adapter.NewTapi(apiConfig, logger)
-	if err != nil {
-		return nil, err
-	}
-
+func New(db *sqlx.DB, client *investgo.Client, logger *zap.Logger) *Collector {
 	return &Collector{
 		db:     db,
 		logger: logger,
-		tapi:   tapi,
-	}, nil
-}
-
-func (o *Collector) Close() {
-	if o.db != nil {
-		o.db.Close()
-	}
-	if o.logger != nil {
-		o.logger.Close()
-	}
-	if o.tapi != nil {
-		o.tapi.Close()
+		client: client,
 	}
 }
 
-func (o *Collector) ImportShares(ctx context.Context) error {
+func (o *Collector) Schema(ctx context.Context, drop bool) {
+	o.logger.Info("schema", zap.Bool("drop", drop))
 
-	o.logger.Infof("import shares")
-
-	items := shares.NewShares()
-	if err := items.Scheme(ctx, o.db); err != nil {
-		return err
+	if err := shares.NewSchema(o.db).Execute(ctx, drop); err != nil {
+		o.logger.Error("shares, error", zap.Error(err))
+	} else {
+		o.logger.Info("shares, schema completed")
 	}
 
-	o.logger.Infof("import shares, scheme recreated")
-
-	if err := items.Import(o.tapi); err != nil {
-		return err
+	if err := last_prices.NewSchema(o.db).Execute(ctx, drop); err != nil {
+		o.logger.Error("last prices, error", zap.Error(err))
+	} else {
+		o.logger.Info("last prices, schema completed")
 	}
 
-	o.logger.Infof("import shares, data received")
-
-	if err := items.Insert(ctx, o.db); err != nil {
-		return err
+	if err := dividends.NewSchema(o.db).Execute(ctx, drop); err != nil {
+		o.logger.Error("dividends, error", zap.Error(err))
+	} else {
+		o.logger.Info("dividends, schema completed")
 	}
 
-	o.logger.Infof("import shares, data saved")
-
-	return nil
 }
 
-func (o *Collector) ImportLastPrices(ctx context.Context, currency string) error {
+func (o *Collector) ImportShares(ctx context.Context) {
 
-	o.logger.Infof("import last prices")
+	o.logger.Info("import shares")
 
-	s := shares.NewShares()
-
-	if err := s.ReadByCurrency(ctx, o.db, currency); err != nil {
-		return err
+	if err := shares.NewSave(o.db, o.client).Execute(ctx); err != nil {
+		o.logger.Error("import shares, error", zap.Error(err))
+	} else {
+		o.logger.Info("import shares, data received and saved")
 	}
-	o.logger.Infof("import last prices, got UIDs for %s", currency)
-
-	items := last_prices.NewLastPrices(s.GetUids()...)
-	if err := items.Scheme(ctx, o.db); err != nil {
-		return err
-	}
-
-	o.logger.Infof("import last prices, scheme recreated")
-
-	if err := items.Import(o.tapi); err != nil {
-		return err
-	}
-
-	o.logger.Infof("import last prices, data received")
-
-	if err := items.Insert(ctx, o.db); err != nil {
-		return err
-	}
-
-	o.logger.Infof("import last prices, data saved")
-
-	return nil
 }
 
-func (o *Collector) ImportDividends(ctx context.Context, currency string, from time.Time, to time.Time) error {
-	o.logger.Infof("import dividends")
+func (o *Collector) ImportLastPrices(ctx context.Context, currency string) {
 
-	s := shares.NewShares()
+	o.logger.Info("import last prices")
 
-	if err := s.ReadByCurrency(ctx, o.db, currency); err != nil {
-		return err
+	s, err := shares.NewRead(o.db).ByCurrency(ctx, currency)
+
+	if err != nil {
+		o.logger.Error("import last prices, error", zap.Error(err))
+		return
+	} else {
+		o.logger.Info("import last prices, got shares by currency",
+			zap.String("currency", currency),
+			zap.Int("count", len(s)))
 	}
 
-	o.logger.Infof("import dividends, got FIGIs for %s", currency)
+	if err = last_prices.NewSave(o.db, o.client).Execute(ctx, s.GetUids()); err != nil {
+		o.logger.Error("import last prices, error", zap.Error(err))
+	} else {
+		o.logger.Info("import last prices, data received and saved")
+	}
+}
 
-	items := dividends.NewDividends(from, to, s.GetFigis()...)
-	if err := items.Scheme(ctx, o.db); err != nil {
-		return err
+func (o *Collector) ImportDividends(ctx context.Context, currency string, from time.Time, to time.Time) {
+
+	o.logger.Info("import dividends")
+
+	s, err := shares.NewRead(o.db).ByCurrency(ctx, currency)
+
+	if err != nil {
+		o.logger.Error("import dividends, error", zap.Error(err))
+		return
+	} else {
+		o.logger.Info("import dividends, got shares by currency",
+			zap.String("currency", currency),
+			zap.Int("count", len(s)))
 	}
 
-	o.logger.Infof("import dividends, scheme recreated")
-
-	if err := items.Import(o.tapi); err != nil {
-		return err
+	if err = dividends.NewSave(o.db, o.client).Execute(ctx, from, to, s.GetFigis()); err != nil {
+		o.logger.Error("import dividends, error", zap.Error(err))
+	} else {
+		o.logger.Info("import dividends, data received and saved")
 	}
-
-	o.logger.Infof("import dividends, data received")
-
-	if err := items.Insert(ctx, o.db); err != nil {
-		return err
-	}
-
-	o.logger.Infof("import dividends, data saved")
-
-	return nil
 }

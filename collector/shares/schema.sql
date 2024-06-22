@@ -1,5 +1,3 @@
-drop table if exists collector_shares;
-
 create table if not exists collector_shares
 (
     figi                  text,

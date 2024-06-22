@@ -3,20 +3,21 @@ package main
 import (
 	"context"
 	_ "embed"
-	"fmt"
-	"github.com/russianinvestments/invest-api-go-sdk/investgo"
+	"os/signal"
+	"syscall"
 	"time"
 	"tin/analyzer"
 	"tin/collector"
+	"tin/core"
 )
 
 var (
-	config   = "config.yaml"
-	db       = ".temp/invests.sqlite3"
-	from     = time.Now().AddDate(-10, 0, 0)
-	to       = time.Now().AddDate(2, 0, 0)
-	currency = "rub"
-	money    = 300_000.0
+	config     = "config.yaml"
+	dbFileName = ".temp/invests.sqlite3"
+	from       = time.Now().AddDate(-10, 0, 0)
+	to         = time.Now().AddDate(2, 0, 0)
+	currency   = "rub"
+	money      = 300_000.0
 )
 
 //go:embed apikey.txt
@@ -24,39 +25,36 @@ var apiKey string
 
 func main() {
 
-	ctx := context.Background()
+	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM, syscall.SIGKILL)
+	defer cancel()
 
-	cfg, err := investgo.LoadConfig(config)
+	logger, err := core.NewLogger()
 	if err != nil {
 		panic(err)
 	}
-	cfg.Token = apiKey
+	defer logger.Close()
 
-	c, err := collector.New(db, cfg)
-	if err != nil || c == nil {
-		panic(fmt.Sprintf("collector not created or error occured : %v", err))
-	}
-
-	defer c.Close()
-
-	if err = c.ImportShares(ctx); err != nil {
+	db, err := core.NewSqliteDb(dbFileName)
+	if err != nil {
 		panic(err)
 	}
+	defer db.Close()
 
-	if err = c.ImportLastPrices(ctx, currency); err != nil {
+	api, err := core.NewApi(ctx, config, apiKey, logger.Get())
+	if err != nil {
 		panic(err)
 	}
+	defer api.Close()
 
-	if err = c.ImportDividends(ctx, currency, from, to); err != nil {
-		panic(err)
-	}
+	c := collector.New(db.Get(), api.Get(), logger.Get())
 
-	a, err := analyzer.New(db)
-	if err != nil || a == nil {
-		panic(fmt.Sprintf("analyzer not created or error occured : %v", err))
-	}
+	c.Schema(ctx, true)
+	c.ImportShares(ctx)
+	c.ImportDividends(ctx, currency, from, to)
+	c.ImportLastPrices(ctx, currency)
 
-	if err = a.HuntForDividends(ctx, money, 10); err != nil {
-		panic(err)
-	}
+	a := analyzer.New(db.Get(), logger.Get())
+
+	a.Schema(ctx, true)
+	a.HuntForDividends(ctx, money, 10)
 }

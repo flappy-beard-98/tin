@@ -1,5 +1,6 @@
 .idea
 .temp
+.private
 vendor
 *.sqlite3
 
@@ -13,7 +14,7 @@ apikey.txt
 *.dylib
 tin*
 *.test
-
+.DS_Store
 *.out
 
 go.work

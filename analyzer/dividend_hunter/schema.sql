@@ -1,5 +1,3 @@
-drop table if exists analyzer_dividend_hunting_base;
-
 create table if not exists analyzer_dividend_hunting_base
 (
     figi        text primary key,
@@ -13,8 +11,6 @@ create table if not exists analyzer_dividend_hunting_base
     ticker      text,
     name        text
 ) without rowid;
-
-drop table if exists analyzer_dividend_hunting_result;
 
 create table if not exists analyzer_dividend_hunting_result
 (

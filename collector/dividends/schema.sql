@@ -1,5 +1,3 @@
-drop table if exists collector_dividends;
-
 create table if not exists collector_dividends
 (
     figi         text,
@@ -17,5 +15,3 @@ create table if not exists collector_dividends
     constraint collector_dividends_pk
         primary key (figi, createdat)
 ) without rowid;
-
-

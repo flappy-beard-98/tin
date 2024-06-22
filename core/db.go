@@ -1,4 +1,4 @@
-package adapter
+package core
 
 import (
 	"github.com/jmoiron/sqlx"
@@ -8,7 +8,7 @@ import (
 )
 
 type Db struct {
-	*sqlx.DB
+	db *sqlx.DB
 }
 
 func NewSqliteDb(filename string) (*Db, error) {
@@ -23,7 +23,8 @@ func NewSqliteDb(filename string) (*Db, error) {
 	if err = db.Ping(); err != nil {
 		return nil, err
 	}
-	return &Db{DB: db}, nil
+
+	return &Db{db: db}, nil
 }
 
 func createDirectoryIfNotExists(path string) error {
@@ -35,6 +36,13 @@ func createDirectoryIfNotExists(path string) error {
 	return nil
 }
 
+func (o *Db) Get() *sqlx.DB {
+	return o.db
+}
+
 func (o *Db) Close() {
-	_ = o.DB.Close()
+	err := o.db.Close()
+	if err != nil {
+		println(err.Error())
+	}
 }

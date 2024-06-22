@@ -31,4 +31,5 @@ from next_dividends d
          join collector_last_prices p on p.figi = d.figi
          join collector_shares s on s.figi = d.figi
 where d.rownum = 1
-on conflict (figi) do nothing;
+on conflict (figi) do nothing
+returning *;
