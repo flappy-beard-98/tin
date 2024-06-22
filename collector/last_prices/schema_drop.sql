@@ -1,0 +1,1 @@
+drop table if exists collector_last_prices;

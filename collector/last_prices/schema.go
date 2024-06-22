@@ -17,10 +17,13 @@ func NewSchema(db *sqlx.DB) *Schema {
 //go:embed schema.sql
 var schema string
 
+//go:embed schema_drop.sql
+var schemaDrop string
+
 func (o *Schema) Execute(ctx context.Context, drop bool) error {
 	var err error
 	if drop {
-		_, err = o.db.ExecContext(ctx, `drop table if exists collector_last_prices;`)
+		_, err = o.db.ExecContext(ctx, schemaDrop)
 	}
 	if err != nil {
 		return err

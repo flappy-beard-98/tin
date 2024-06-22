@@ -17,7 +17,7 @@ func NewRead(db *sqlx.DB) *Read {
 //go:embed read_by_currency.sql
 var readByCurrency string
 
-func (o *Read) ByCurrency(ctx context.Context, currency string) (Shares, error) {
+func (o *Read) SharesByCurrency(ctx context.Context, currency string) (Shares, error) {
 	result := make([]Share, 0)
 	err := o.db.SelectContext(ctx, &result, readByCurrency, currency)
 	return result, err

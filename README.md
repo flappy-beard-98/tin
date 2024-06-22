@@ -5,20 +5,23 @@
 ## contents
 
 - [analyzer](/analyzer/readme.md) - анализаторы, которые собранные данные
-   - [dividend_hunter](/analyzer/dividend_hunter/readme.md) - поиск наилучшей комбинации покупки, получения и продажи дивидендов
+   - [dividend_hunter](/analyzer/dividend_hunter/readme.md) - поиск наилучшего времени для покупки, получения и продажи дивидендов
 - [collector](/collector/readme.md) - коллекторы, которые собирают данные
-  - [account](/collector/account/readme.md) - загружает данные об аккаунте
+  - [account](/collector/accounts/readme.md) - загружает данные об аккаунтах
   - [dividends](/collector/dividends/readme.md) - загружает данные по дивидендам
   - [last_prices](/collector/last_prices/readme.md) - загружает последние цены
+  - [portfolio](/collector/portfolio/readme.md) - загружает данные о портфеле
   - [shares](/collector/shares/readme.md) - загружает данные по акциям
-- [core](/core/readme.md) - общая библиотека со вспомогательными типами
+- [core](/core/readme.md) - общая библиотека со вспомогательными типами и функциями
 - [tgbot](/tgbot/readme.md) - телеграм бот
 - [trader](/trader/readme.md) - поручения и их исполнение, то есть торговля
 
 ## todo
 
 - [ ] задокументировать
-- [ ] получение портфеля
+- [x] получение аккаунтов
+- [x] получение портфеля
+- [ ] получение котировок
 - [ ] дивиденды
   - [x] загрузка данных о дивидендах
   - [x] поиск наилучшей последовательности покупка-получение-продажа-покупка для дивидендных акций

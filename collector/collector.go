@@ -9,6 +9,7 @@ import (
 	"tin/collector/accounts"
 	"tin/collector/dividends"
 	"tin/collector/last_prices"
+	"tin/collector/portfolio"
 	"tin/collector/shares"
 )
 
@@ -53,6 +54,33 @@ func (o *Collector) Schema(ctx context.Context, drop bool) {
 		o.logger.Info("accounts, schema completed")
 	}
 
+	if err := portfolio.NewSchema(o.db).Execute(ctx, drop); err != nil {
+		o.logger.Error("accounts, error", zap.Error(err))
+	} else {
+		o.logger.Info("accounts, schema completed")
+	}
+
+}
+
+func (o *Collector) ImportPortfolio(ctx context.Context) {
+
+	o.logger.Info("import portfolio")
+
+	a, err := accounts.NewRead(o.db).AccountIds(ctx)
+
+	if err != nil {
+		o.logger.Error("import portfolio, error", zap.Error(err))
+		return
+	} else {
+		o.logger.Info("import portfolio, got account ids")
+	}
+
+	if err = portfolio.NewSave(o.db, o.client).Execute(ctx, a); err != nil {
+		o.logger.Error("import portfolio, error", zap.Error(err))
+	} else {
+		o.logger.Info("import portfolio, data received and saved")
+	}
+
 }
 
 func (o *Collector) ImportAccounts(ctx context.Context) {
@@ -81,7 +109,7 @@ func (o *Collector) ImportLastPrices(ctx context.Context, currency string) {
 
 	o.logger.Info("import last prices")
 
-	s, err := shares.NewRead(o.db).ByCurrency(ctx, currency)
+	s, err := shares.NewRead(o.db).SharesByCurrency(ctx, currency)
 
 	if err != nil {
 		o.logger.Error("import last prices, error", zap.Error(err))
@@ -103,7 +131,7 @@ func (o *Collector) ImportDividends(ctx context.Context, currency string, from t
 
 	o.logger.Info("import dividends")
 
-	s, err := shares.NewRead(o.db).ByCurrency(ctx, currency)
+	s, err := shares.NewRead(o.db).SharesByCurrency(ctx, currency)
 
 	if err != nil {
 		o.logger.Error("import dividends, error", zap.Error(err))

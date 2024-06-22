@@ -50,6 +50,7 @@ func main() {
 
 	c.Schema(ctx, true)
 	c.ImportAccounts(ctx)
+	c.ImportPortfolio(ctx)
 	c.ImportShares(ctx)
 	c.ImportDividends(ctx, currency, from, to)
 	c.ImportLastPrices(ctx, currency)

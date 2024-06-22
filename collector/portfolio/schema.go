@@ -1,4 +1,4 @@
-package dividends
+package portfolio
 
 import (
 	"context"

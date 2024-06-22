@@ -32,7 +32,6 @@ func (o *Save) Execute(ctx context.Context) error {
 
 func (o *Save) getAccounts() ([]*investapi.Account, error) {
 	service := o.api.NewUsersServiceClient()
-
 	response, err := service.GetAccounts()
 
 	if err != nil {
@@ -50,15 +49,19 @@ var save string
 
 func (o *Save) saveAccounts(ctx context.Context, data []*investapi.Account) error {
 	for _, v := range data {
+		var closed *string = nil
+		if v.ClosedDate != nil && v.ClosedDate.AsTime().Unix() > 0 {
+			*closed = v.ClosedDate.AsTime().Format("2006-01-02")
+		}
 		_, err := o.db.NamedExecContext(ctx, save,
 			map[string]interface{}{
 				"id":          v.Id,
-				"type":        v.Type,
+				"type":        v.Type.String(),
 				"name":        v.Name,
-				"status":      v.Status,
+				"status":      v.Status.String(),
 				"openeddate":  v.OpenedDate.AsTime().Format("2006-01-02"),
-				"closeddate":  v.ClosedDate.AsTime().Format("2006-01-02"),
-				"accesslevel": v.Status,
+				"closeddate":  closed,
+				"accesslevel": v.Status.String(),
 			})
 
 		if err != nil {
