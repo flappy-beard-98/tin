@@ -6,6 +6,7 @@ import (
 	"github.com/russianinvestments/invest-api-go-sdk/investgo"
 	"go.uber.org/zap"
 	"time"
+	"tin/collector/accounts"
 	"tin/collector/dividends"
 	"tin/collector/last_prices"
 	"tin/collector/shares"
@@ -46,6 +47,23 @@ func (o *Collector) Schema(ctx context.Context, drop bool) {
 		o.logger.Info("dividends, schema completed")
 	}
 
+	if err := accounts.NewSchema(o.db).Execute(ctx, drop); err != nil {
+		o.logger.Error("accounts, error", zap.Error(err))
+	} else {
+		o.logger.Info("accounts, schema completed")
+	}
+
+}
+
+func (o *Collector) ImportAccounts(ctx context.Context) {
+
+	o.logger.Info("import accounts")
+
+	if err := accounts.NewSave(o.db, o.client).Execute(ctx); err != nil {
+		o.logger.Error("import accounts, error", zap.Error(err))
+	} else {
+		o.logger.Info("import accounts, data received and saved")
+	}
 }
 
 func (o *Collector) ImportShares(ctx context.Context) {

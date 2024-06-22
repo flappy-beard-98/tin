@@ -1,4 +1,4 @@
-package account
+package accounts
 
 import (
 	"context"
@@ -20,7 +20,7 @@ var schema string
 func (o *Schema) Execute(ctx context.Context, drop bool) error {
 	var err error
 	if drop {
-		_, err = o.db.ExecContext(ctx, `drop table if exists collector_last_prices;`)
+		_, err = o.db.ExecContext(ctx, `drop table if exists collector_accounts;`)
 	}
 	if err != nil {
 		return err

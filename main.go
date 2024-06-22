@@ -49,6 +49,7 @@ func main() {
 	c := collector.New(db.Get(), api.Get(), logger.Get())
 
 	c.Schema(ctx, true)
+	c.ImportAccounts(ctx)
 	c.ImportShares(ctx)
 	c.ImportDividends(ctx, currency, from, to)
 	c.ImportLastPrices(ctx, currency)
