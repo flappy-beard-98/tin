@@ -7,15 +7,17 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/russianinvestments/invest-api-go-sdk/investgo"
 	investapi "github.com/russianinvestments/invest-api-go-sdk/proto"
+	"go.uber.org/zap"
 )
 
 type Save struct {
 	db  *sqlx.DB
 	api *investgo.Client
+	log *zap.Logger
 }
 
-func NewSave(db *sqlx.DB, api *investgo.Client) *Save {
-	return &Save{db, api}
+func NewSave(db *sqlx.DB, api *investgo.Client, log *zap.Logger) *Save {
+	return &Save{db, api, log}
 }
 
 func (o *Save) Execute(ctx context.Context, accountIds []string) error {
@@ -31,6 +33,8 @@ func (o *Save) Execute(ctx context.Context, accountIds []string) error {
 }
 
 func (o *Save) getPortfolio(accountIds []string) ([]*investapi.PortfolioResponse, error) {
+	o.log.Debug("get portfolios", zap.Strings("accountIds", accountIds))
+
 	service := o.api.NewOperationsServiceClient()
 	errs := make([]error, 0)
 	result := make([]*investapi.PortfolioResponse, 0)
@@ -45,6 +49,9 @@ func (o *Save) getPortfolio(accountIds []string) ([]*investapi.PortfolioResponse
 			errs = append(errs, errors.New("empty shares response"))
 			continue
 		}
+
+		o.log.Debug("got portfolio", zap.String("accountId", v))
+
 		result = append(result, response.PortfolioResponse)
 	}
 
@@ -65,7 +72,7 @@ var savePositions string
 var savePositionsVirtual string
 
 func (o *Save) savePortfolio(ctx context.Context, data []*investapi.PortfolioResponse) error {
-
+	o.log.Debug("save portfolios")
 	for _, v := range data {
 		errs := make([]error, 0)
 
@@ -75,11 +82,13 @@ func (o *Save) savePortfolio(ctx context.Context, data []*investapi.PortfolioRes
 			continue
 		}
 
+		o.log.Debug("save portfolio", zap.String("accountId", v.AccountId))
 		_, err = tx.NamedExecContext(ctx, savePortfolio, portfolioToMap(v))
 		if err != nil {
 			errs = append(errs, err)
 		}
 
+		o.log.Debug("save virtual positions", zap.String("accountId", v.AccountId))
 		for _, vp := range v.VirtualPositions {
 			if _, err = tx.NamedExecContext(ctx, savePositionsVirtual, virtualPositionToMap(v.AccountId, vp)); err != nil {
 				errs = append(errs, err)
@@ -87,6 +96,7 @@ func (o *Save) savePortfolio(ctx context.Context, data []*investapi.PortfolioRes
 			}
 		}
 
+		o.log.Debug("save positions", zap.String("accountId", v.AccountId))
 		for _, p := range v.Positions {
 			if _, err = tx.NamedExecContext(ctx, savePositions, positionToMap(v.AccountId, p)); err != nil {
 				errs = append(errs, err)
@@ -109,6 +119,7 @@ func (o *Save) savePortfolio(ctx context.Context, data []*investapi.PortfolioRes
 			}
 		}
 	}
+	o.log.Debug("portfolios saved")
 	return nil
 }
 

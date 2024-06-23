@@ -14,8 +14,8 @@ import (
 var (
 	config     = "config.yaml"
 	dbFileName = ".temp/invests.sqlite3"
-	from       = time.Now().AddDate(-10, 0, 0)
-	to         = time.Now().AddDate(2, 0, 0)
+	now        = time.Now()
+	past       = now.AddDate(-5, 0, 0)
 	currency   = "rub"
 	money      = 300_000.0
 )
@@ -52,8 +52,9 @@ func main() {
 	c.ImportAccounts(ctx)
 	c.ImportPortfolio(ctx)
 	c.ImportShares(ctx)
-	c.ImportDividends(ctx, currency, from, to)
 	c.ImportLastPrices(ctx, currency)
+	c.ImportHistoricCandles(ctx, currency, past, now)
+	c.ImportDividends(ctx, currency, past, now.AddDate(2, 0, 0))
 
 	a := analyzer.New(db.Get(), logger.Get())
 

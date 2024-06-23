@@ -7,15 +7,17 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/russianinvestments/invest-api-go-sdk/investgo"
 	investapi "github.com/russianinvestments/invest-api-go-sdk/proto"
+	"go.uber.org/zap"
 )
 
 type Save struct {
 	db  *sqlx.DB
 	api *investgo.Client
+	log *zap.Logger
 }
 
-func NewSave(db *sqlx.DB, api *investgo.Client) *Save {
-	return &Save{db, api}
+func NewSave(db *sqlx.DB, api *investgo.Client, log *zap.Logger) *Save {
+	return &Save{db, api, log}
 }
 
 func (o *Save) Execute(ctx context.Context, uids []string) error {
@@ -32,7 +34,7 @@ func (o *Save) Execute(ctx context.Context, uids []string) error {
 
 func (o *Save) getLastPrices(uids []string) ([]*investapi.LastPrice, error) {
 	service := o.api.NewMarketDataServiceClient()
-
+	o.log.Debug("get last prices")
 	response, err := service.GetLastPrices(uids)
 
 	if err != nil {
@@ -49,6 +51,7 @@ func (o *Save) getLastPrices(uids []string) ([]*investapi.LastPrice, error) {
 var save string
 
 func (o *Save) saveLastPrices(ctx context.Context, data []*investapi.LastPrice) error {
+	o.log.Debug("save last prices")
 	for _, v := range data {
 		_, err := o.db.NamedExecContext(ctx, save,
 			map[string]interface{}{
@@ -62,5 +65,6 @@ func (o *Save) saveLastPrices(ctx context.Context, data []*investapi.LastPrice) 
 			return err
 		}
 	}
+	o.log.Debug("last prices saved")
 	return nil
 }

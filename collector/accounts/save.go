@@ -7,15 +7,17 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/russianinvestments/invest-api-go-sdk/investgo"
 	investapi "github.com/russianinvestments/invest-api-go-sdk/proto"
+	"go.uber.org/zap"
 )
 
 type Save struct {
 	db  *sqlx.DB
 	api *investgo.Client
+	log *zap.Logger
 }
 
-func NewSave(db *sqlx.DB, api *investgo.Client) *Save {
-	return &Save{db, api}
+func NewSave(db *sqlx.DB, api *investgo.Client, log *zap.Logger) *Save {
+	return &Save{db, api, log}
 }
 
 func (o *Save) Execute(ctx context.Context) error {
@@ -32,6 +34,7 @@ func (o *Save) Execute(ctx context.Context) error {
 
 func (o *Save) getAccounts() ([]*investapi.Account, error) {
 	service := o.api.NewUsersServiceClient()
+	o.log.Debug("get accounts")
 	response, err := service.GetAccounts()
 
 	if err != nil {
@@ -48,6 +51,7 @@ func (o *Save) getAccounts() ([]*investapi.Account, error) {
 var save string
 
 func (o *Save) saveAccounts(ctx context.Context, data []*investapi.Account) error {
+	o.log.Debug("save accounts")
 	for _, v := range data {
 		var closed *string = nil
 		if v.ClosedDate != nil && v.ClosedDate.AsTime().Unix() > 0 {
@@ -68,5 +72,6 @@ func (o *Save) saveAccounts(ctx context.Context, data []*investapi.Account) erro
 			return err
 		}
 	}
+	o.log.Debug("accounts saved")
 	return nil
 }

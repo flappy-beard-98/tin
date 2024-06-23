@@ -7,15 +7,17 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/russianinvestments/invest-api-go-sdk/investgo"
 	investapi "github.com/russianinvestments/invest-api-go-sdk/proto"
+	"go.uber.org/zap"
 )
 
 type Save struct {
 	db  *sqlx.DB
 	api *investgo.Client
+	log *zap.Logger
 }
 
-func NewSave(db *sqlx.DB, api *investgo.Client) *Save {
-	return &Save{db, api}
+func NewSave(db *sqlx.DB, api *investgo.Client, log *zap.Logger) *Save {
+	return &Save{db, api, log}
 }
 
 func (o *Save) Execute(ctx context.Context) error {
@@ -31,6 +33,8 @@ func (o *Save) Execute(ctx context.Context) error {
 }
 
 func (o *Save) getShares() ([]*investapi.Share, error) {
+	o.log.Debug("get shares")
+
 	service := o.api.NewInstrumentsServiceClient()
 
 	response, err := service.Shares(investapi.InstrumentStatus_INSTRUMENT_STATUS_BASE)
@@ -49,6 +53,7 @@ func (o *Save) getShares() ([]*investapi.Share, error) {
 var save string
 
 func (o *Save) saveShares(ctx context.Context, data []*investapi.Share) error {
+	o.log.Debug("save shares")
 	for _, v := range data {
 		_, err := o.db.NamedExecContext(ctx, save,
 			map[string]interface{}{
@@ -98,5 +103,6 @@ func (o *Save) saveShares(ctx context.Context, data []*investapi.Share) error {
 			return err
 		}
 	}
+	o.log.Debug("shares saved")
 	return nil
 }

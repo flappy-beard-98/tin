@@ -5,17 +5,19 @@ import (
 	"context"
 	_ "embed"
 	"github.com/jmoiron/sqlx"
+	"go.uber.org/zap"
 	"slices"
 	"strconv"
 	"tin/core"
 )
 
 type Analyze struct {
-	db *sqlx.DB
+	db  *sqlx.DB
+	log *zap.Logger
 }
 
-func NewAnalyze(db *sqlx.DB) *Analyze {
-	return &Analyze{db}
+func NewAnalyze(db *sqlx.DB, log *zap.Logger) *Analyze {
+	return &Analyze{db, log}
 }
 
 //go:embed analyze_prepare.sql
@@ -31,6 +33,7 @@ func (o *Analyze) Execute(ctx context.Context, balance float64, bestResultsCount
 		return err
 	}
 
+	o.log.Info("dividend hunting analysis")
 	results := o.analyze(balance, bestResultsCount, items)
 
 	err = o.save(ctx, results)
@@ -97,17 +100,20 @@ func sum(results []ResultItem) float64 {
 }
 
 func (o *Analyze) prepare(ctx context.Context) ([]BaseItem, error) {
+	o.log.Debug("prepare dividend hunting")
 	result := make([]BaseItem, 0)
 	err := o.db.SelectContext(ctx, &result, prepare)
 	return result, err
 }
 
 func (o *Analyze) save(ctx context.Context, data []ResultItem) error {
+	o.log.Debug("save dividend hunting results")
 	for _, v := range data {
 		_, err := o.db.NamedExecContext(ctx, save, v)
 		if err != nil {
 			return err
 		}
 	}
+	o.log.Debug("dividend hunting results saved")
 	return nil
 }

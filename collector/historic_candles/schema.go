@@ -1,4 +1,4 @@
-package last_prices
+package historic_candles
 
 import (
 	"context"

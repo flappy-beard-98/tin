@@ -4,44 +4,25 @@ import (
 	"context"
 	_ "embed"
 	"github.com/jmoiron/sqlx"
+	"go.uber.org/zap"
 )
 
 type Read struct {
-	db *sqlx.DB
+	db  *sqlx.DB
+	log *zap.Logger
 }
 
-func NewRead(db *sqlx.DB) *Read {
-	return &Read{db}
+func NewRead(db *sqlx.DB, log *zap.Logger) *Read {
+	return &Read{db, log}
 }
 
 //go:embed read_by_currency.sql
 var readByCurrency string
 
 func (o *Read) SharesByCurrency(ctx context.Context, currency string) (Shares, error) {
+	o.log.Debug("get shares by currency")
+
 	result := make([]Share, 0)
 	err := o.db.SelectContext(ctx, &result, readByCurrency, currency)
 	return result, err
-}
-
-type Share struct {
-	Figi string
-	Uid  string
-}
-
-type Shares []Share
-
-func (o Shares) GetFigis() []string {
-	r := make([]string, 0)
-	for _, v := range o {
-		r = append(r, v.Figi)
-	}
-	return r
-}
-
-func (o Shares) GetUids() []string {
-	r := make([]string, 0)
-	for _, v := range o {
-		r = append(r, v.Uid)
-	}
-	return r
 }

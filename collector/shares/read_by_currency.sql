@@ -1,7 +1,5 @@
-select
-    figi,
-    uid
+select figi,
+       uid
 from collector_shares
-where
-    currency = :currency
+where currency = :currency
 ;

@@ -7,16 +7,18 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/russianinvestments/invest-api-go-sdk/investgo"
 	investapi "github.com/russianinvestments/invest-api-go-sdk/proto"
+	"go.uber.org/zap"
 	"time"
 )
 
 type Save struct {
 	db  *sqlx.DB
 	api *investgo.Client
+	log *zap.Logger
 }
 
-func NewSave(db *sqlx.DB, api *investgo.Client) *Save {
-	return &Save{db, api}
+func NewSave(db *sqlx.DB, api *investgo.Client, log *zap.Logger) *Save {
+	return &Save{db, api, log}
 }
 
 func (o *Save) Execute(ctx context.Context, from time.Time, to time.Time, figis []string) error {
@@ -35,7 +37,7 @@ func (o *Save) getDividends(from time.Time, to time.Time, figis []string) (map[s
 	service := o.api.NewInstrumentsServiceClient()
 	errs := make([]error, 0)
 	result := make(map[string]*investapi.Dividend)
-
+	o.log.Debug("get dividends", zap.Time("from", from), zap.Time("to", to), zap.Strings("figis", figis))
 	for _, v := range figis {
 		response, err := service.GetDividents(v, from, to)
 		if err != nil {
@@ -46,8 +48,11 @@ func (o *Save) getDividends(from time.Time, to time.Time, figis []string) (map[s
 			errs = append(errs, errors.New("empty shares response"))
 			continue
 		}
-		for _, d := range response.Dividends {
-			result[v] = d
+
+		o.log.Debug("got dividends", zap.String("figi", v))
+
+		for _, dividend := range response.Dividends {
+			result[v] = dividend
 		}
 	}
 
@@ -62,6 +67,7 @@ func (o *Save) getDividends(from time.Time, to time.Time, figis []string) (map[s
 var save string
 
 func (o *Save) saveDividends(ctx context.Context, data map[string]*investapi.Dividend) error {
+	o.log.Debug("save dividends")
 	for f, v := range data {
 		_, err := o.db.NamedExecContext(ctx, save,
 			map[string]interface{}{
@@ -81,5 +87,6 @@ func (o *Save) saveDividends(ctx context.Context, data map[string]*investapi.Div
 			return err
 		}
 	}
+	o.log.Debug("dividends saved")
 	return nil
 }

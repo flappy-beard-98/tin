@@ -1,5 +1,5 @@
 AccountId: ""
-APIToken: 
+APIToken:
 EndPoint: invest-public-api.tinkoff.ru:443
 AppName: invest-api-go-sdk
 DisableResourceExhaustedRetry: false

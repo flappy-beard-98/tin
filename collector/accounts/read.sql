@@ -1,4 +1,3 @@
-select
-    id
+select id
 from collector_accounts
 ;

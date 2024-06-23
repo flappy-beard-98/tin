@@ -12,6 +12,5 @@ create table if not exists collector_dividends
     yieldvalue   real,
     createdat    text,
 
-    constraint collector_dividends_pk
-        primary key (figi, createdat)
+    primary key (figi, createdat)
 ) without rowid;

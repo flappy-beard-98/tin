@@ -22,6 +22,5 @@ create table if not exists analyzer_dividend_hunting_result
     paymentdate text,
     expectation real,
 
-    constraint collector_dividends_pk
-        primary key (figi, tag)
+    primary key (figi, tag)
 ) without rowid;
